@@ -1,0 +1,11 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/user_crud?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8}
+    username: ${DB_USER:root}   #关系型数据库MYSQL账户
+    password: ${DB_PASS:123456} #关系型数据库MYSQL密码
+
+mybatis:
+  type-aliases-package: org.example.entity

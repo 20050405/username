@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>用户管理系统</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 60%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .form-group { margin-bottom: 10px; }
+        input { padding: 5px; margin-right: 10px; }
+        button { padding: 5px 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h2>用户管理 (CRUD)</h2>
+
+<!-- 新增用户 -->
+<div class="form-group">
+    <input type="text" id="nameInput" placeholder="输入名字">
+    <input type="email" id="emailInput" placeholder="输入邮箱">
+    <button onclick="addUser()">新增用户</button>
+    <button onclick="loadUsers()">刷新列表</button>
+</div>
+
+<!-- 用户列表 -->
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>姓名</th>
+        <th>邮箱</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="userTableBody">
+    <!-- 数据会被 JS 插入到这里 -->
+    </tbody>
+</table>
+
+<script>
+    // 页面加载完成后，自动查一次数据
+    window.onload = loadUsers;
+
+    // 1. 查询所有用户 (GET /users)
+    function loadUsers() {
+        fetch('/users')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = ''; // 清空旧数据
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">暂无数据</td></tr>';
+                    return;
+                }
+
+                data.forEach(user => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><button onclick="deleteUser(${user.id})">删除</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => console.error('查询失败:', err));
+    }
+
+    // 2. 新增用户 (POST /users)
+    function addUser() {
+        const name = document.getElementById('nameInput').value;
+        const email = document.getElementById('emailInput').value;
+
+        if (!name) {
+            alert("名字不能为空");
+            return;
+        }
+
+        fetch('/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, email: email })
+        })
+        .then(response => {
+            if (response.ok) {
+                // 清空输入框，刷新列表
+                document.getElementById('nameInput').value = '';
+                document.getElementById('emailInput').value = '';
+                loadUsers();
+            }
+        })
+        .catch(err => console.error('新增失败:', err));
+    }
+
+    // 3. 删除用户 (DELETE /users/{id})
+    function deleteUser(id) {
+        if (!confirm('确定要删除这条数据吗？')) return;
+
+        fetch(`/users/${id}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    loadUsers(); // 删除成功后刷新列表
+                }
+            })
+            .catch(err => console.error('删除失败:', err));
+    }
+</script>
+</body>
+</html>
